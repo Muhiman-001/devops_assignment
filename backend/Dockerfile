@@ -7,10 +7,13 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci
+RUN npm install
 
 # Copy source code
 COPY . .
+
+# Build the application
+RUN npm run build
 
 # Production stage
 FROM node:18-alpine
@@ -20,13 +23,10 @@ WORKDIR /app
 # Create a non-root user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-# Copy necessary files from builder
+# Copy built files from builder stage
+COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/server.js ./
-COPY --from=builder /app/models ./models
-COPY --from=builder /app/routes ./routes
-COPY --from=builder /app/.env ./
 
 # Install nodemon for development
 RUN npm install -g nodemon
@@ -38,7 +38,7 @@ RUN chown -R appuser:appgroup /app
 USER appuser
 
 # Expose port
-EXPOSE 5000
+EXPOSE 3000
 
 # Start the application
-CMD ["nodemon", "server.js"] 
+CMD ["npm", "start"] 

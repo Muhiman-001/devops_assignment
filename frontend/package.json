@@ -2,6 +2,10 @@
   "name": "frontend",
   "version": "1.0.0",
   "private": true,
+  "description": "",
+  "author": "",
+  "license": "ISC",
+  "keywords": [],
   "dependencies": {
     "@emotion/react": "^11.11.0",
     "@emotion/styled": "^11.11.0",
@@ -34,8 +38,7 @@
     "development": [
       "last 1 chrome version",
       "last 1 firefox version",
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": ""
+      "last 1 safari version"
+    ]
+  }
 }

@@ -1,69 +1,84 @@
 const mongoose = require('mongoose');
 const Employee = require('../models/Employee');
 
-describe('Employee Model', () => {
-  beforeAll(async () => {
-    await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-  });
-
-  afterAll(async () => {
-    await mongoose.connection.close();
-  });
-
+describe('Employee Model Test', () => {
   beforeEach(async () => {
     await Employee.deleteMany({});
   });
 
-  test('should create a new employee', async () => {
-    const employeeData = {
-      name: 'John Doe',
-      email: 'john@example.com',
-      department: 'Engineering',
+  it('should create & save employee successfully', async () => {
+    const validEmployee = new Employee({
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'john.doe@example.com',
       position: 'Software Engineer',
-      attendance: 95,
-      projects: 5,
-    };
+      department: 'Engineering',
+      salary: 75000
+    });
 
-    const employee = new Employee(employeeData);
-    const savedEmployee = await employee.save();
-
+    const savedEmployee = await validEmployee.save();
+    
     expect(savedEmployee._id).toBeDefined();
-    expect(savedEmployee.name).toBe(employeeData.name);
-    expect(savedEmployee.email).toBe(employeeData.email);
-    expect(savedEmployee.department).toBe(employeeData.department);
-    expect(savedEmployee.position).toBe(employeeData.position);
-    expect(savedEmployee.attendance).toBe(employeeData.attendance);
-    expect(savedEmployee.projects).toBe(employeeData.projects);
+    expect(savedEmployee.firstName).toBe(validEmployee.firstName);
+    expect(savedEmployee.lastName).toBe(validEmployee.lastName);
+    expect(savedEmployee.email).toBe(validEmployee.email);
+    expect(savedEmployee.position).toBe(validEmployee.position);
+    expect(savedEmployee.department).toBe(validEmployee.department);
+    expect(savedEmployee.salary).toBe(validEmployee.salary);
+    expect(savedEmployee.isActive).toBe(true);
   });
 
-  test('should not create employee with invalid email', async () => {
-    const employeeData = {
-      name: 'John Doe',
-      email: 'invalid-email',
-      department: 'Engineering',
-      position: 'Software Engineer',
-      attendance: 95,
-      projects: 5,
-    };
+  it('should fail to save employee without required fields', async () => {
+    const employeeWithoutRequiredField = new Employee({
+      firstName: 'John'
+    });
 
-    const employee = new Employee(employeeData);
-    await expect(employee.save()).rejects.toThrow();
+    let err;
+    try {
+      await employeeWithoutRequiredField.save();
+    } catch (error) {
+      err = error;
+    }
+
+    expect(err).toBeInstanceOf(mongoose.Error.ValidationError);
   });
 
-  test('should not create employee with negative attendance', async () => {
-    const employeeData = {
-      name: 'John Doe',
-      email: 'john@example.com',
-      department: 'Engineering',
+  it('should update employee salary successfully', async () => {
+    const employee = new Employee({
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'john.doe@example.com',
       position: 'Software Engineer',
-      attendance: -10,
-      projects: 5,
-    };
+      department: 'Engineering',
+      salary: 75000
+    });
 
-    const employee = new Employee(employeeData);
-    await expect(employee.save()).rejects.toThrow();
+    await employee.save();
+
+    const updatedEmployee = await Employee.findByIdAndUpdate(
+      employee._id,
+      { salary: 80000 },
+      { new: true }
+    );
+
+    expect(updatedEmployee.salary).toBe(80000);
+  });
+
+  it('should delete employee successfully', async () => {
+    const employee = new Employee({
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'john.doe@example.com',
+      position: 'Software Engineer',
+      department: 'Engineering',
+      salary: 75000
+    });
+
+    await employee.save();
+
+    await Employee.findByIdAndDelete(employee._id);
+    const deletedEmployee = await Employee.findById(employee._id);
+
+    expect(deletedEmployee).toBeNull();
   });
 }); 
